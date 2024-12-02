@@ -28,6 +28,7 @@ public class Main {
 
 // 2. Execute your query
             ResultSet results = statement.executeQuery(query);
+
 // process the results
             while (results.next()) {
                 String city = results.getString("City");
