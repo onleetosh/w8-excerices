@@ -15,12 +15,20 @@ public class Main {
         // get the user name and password from the command line args
         String username = args[0];
         String password = args[1];
+
+        executeDatabase(username, password);
+
+
+    }
+
+
+    public static void executeDatabase(String username, String password){
+        Connection connection = null;
         try {
             // load the MySQL Driver
             Class.forName("com.mysql.cj.jdbc.Driver");
             // 1. open a connection to the database
             // use the database URL to point to the correct database and establish a connection
-            Connection connection;
             connection = DriverManager.getConnection(
                     "jdbc:mysql://localhost:3306/northwind",
                     username,
@@ -49,7 +57,7 @@ public class Main {
             }
 
             // 3. Close the connection
-            connection.close();
+            //  connection.close();
         } catch (ClassNotFoundException e) {
             System.out.println("Class not found ");
             e.printStackTrace();
@@ -58,5 +66,15 @@ public class Main {
             e.printStackTrace();
         }
 
+        finally {
+            if(connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        }
     }
 }
