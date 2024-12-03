@@ -58,7 +58,7 @@ public class UsingStatement {
             // the statement is tied to the open connection
             Statement statement = connection.createStatement();
             // define your query
-            String query = "SELECT * FROM customers ORDER BY country;";
+            String query = "SELECT * FROM customers WHERE Country IS NOT NULL ORDER BY country;";
 
             // 2. Execute your query
             ResultSet results = statement.executeQuery(query);
@@ -99,6 +99,17 @@ public class UsingStatement {
         }
     }
 
+    public static void displayProductHeader(){
+        System.out.printf("%-15s %-35s %-15s %-15s\n",
+                "Product ID", "Product Name", "Unit Price", "Products in Stock");
+
+    }
+
+    public static void displayProducts(int productID,String productName, double unitPrice, int productStock){
+        System.out.printf("%-15d %-35s %-25.2f %-15d\n",productID, productName, unitPrice, productStock );
+
+    }
+
     public static void fetchProductsFromDatabase(String username, String password){
         Connection connection = null;
         try {
@@ -119,18 +130,16 @@ public class UsingStatement {
             // 2. Execute your query
             ResultSet results = statement.executeQuery(query);
 
-            System.out.printf("%-15s %-35s %-15s %-15s\n",
-                    "Product ID", "Product Name", "Unit Price", "Products in Stock");
-
-
+            displayProductHeader();
             // list product ID, Product Name, Unit Price, Unit In stock
             // process the results
             while (results.next()) {
-                int productID = results.getInt("ProductID");
-                String productName = results.getString("ProductName");
-                double unitPrice = results.getDouble("UnitPrice");
-                int productStock = results.getInt("UnitsInStock");
-                System.out.printf("%-15d %-35s %-25.2f %-15d\n",productID, productName, unitPrice, productStock );
+                displayProducts(results.getInt("ProductID"),
+                                results.getString("ProductName"),
+                                results.getDouble("UnitPrice"),
+                                results.getInt("UnitsInStock"));
+
+                //System.out.printf("%-15d %-35s %-25.2f %-15d\n",productID, productName, unitPrice, productStock );
             }
 
             // 3. Close the connection

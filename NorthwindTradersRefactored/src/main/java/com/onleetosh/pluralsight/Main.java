@@ -1,8 +1,10 @@
 package com.onleetosh.pluralsight;
 
+import org.apache.commons.dbcp2.BasicDataSource;
+
 import java.sql.*;
 
-public class UsingPreparedStatement {
+public class Main {
 
     public static void main(String[] args) {
 
@@ -31,25 +33,25 @@ public class UsingPreparedStatement {
             try {
                 command = Console.PromptForInt("Select [0-2]: ");
 
-            switch (command) {
-                case 1 -> {
-                    fetchProductsFromDatabase(username, password, url);
-                    Console.PromptForString("\nPress ENTER to return to previous screen");
-                }
-                case 2 -> {
-                    fetchCustomersFromDatabase(username, password, url);
-                    Console.PromptForString("\nPress ENTER to return to previous screen");
-                }
-                case 3 -> {
-                    fetchCategoriesFromDatabase(username, password, url);
-                    returnProductsByCategoryID(username, password, url);
-                    Console.PromptForString("\nPress ENTER to return to previous screen");
+                switch (command) {
+                    case 1 -> {
+                        fetchProductsFromDatabase(username, password, url);
+                        Console.PromptForString("\nPress ENTER to return to previous screen");
                     }
-                case 0 -> {
-                    System.out.println("Exiting the application. Goodbye!");
-                    exit = true;
-                }
-                default -> System.out.println("Invalid entry. Please enter 0, 1, or 2.");
+                    case 2 -> {
+                        fetchCustomersFromDatabase(username, password, url);
+                        Console.PromptForString("\nPress ENTER to return to previous screen");
+                    }
+                    case 3 -> {
+                        fetchCategoriesFromDatabase(username, password, url);
+                        outputProductsByCategoryID(username, password, url);
+                        Console.PromptForString("\nPress ENTER to return to previous screen");
+                    }
+                    case 0 -> {
+                        System.out.println("Exiting the application. Goodbye!");
+                        exit = true;
+                    }
+                    default -> System.out.println("Invalid entry. Please enter 0, 1, or 2.");
                 }
             }
             catch (Exception e) {
@@ -72,20 +74,27 @@ public class UsingPreparedStatement {
 
             System.out.println("Connected to the database.");
 
-            String query = "SELECT * FROM customers WHERE Country IS NOT NULL ORDER BY Country";
+            String query = "SELECT * FROM customers ORDER BY Country";
             ps = connection.prepareStatement(query);
             results = ps.executeQuery();
 
-            printCustomerHeader();
+            // Print header
+            System.out.printf("%-25s %-40s %-25s %-25s %-15s\n",
+                    "Contact Name", "Company Name", "City", "Country", "Phone Number");
+
             // Process the results
             boolean hasResults = false;
             while (results.next()) {
                 hasResults = true;
-                printCustomerInformation(results.getString("ContactName"),
-                       results.getString("CompanyName"),
-                       results.getString("City"),
-                       results.getString("Country"),
-                       results.getString("Phone"));
+                String contactName = results.getString("ContactName");
+                String companyName = results.getString("CompanyName");
+                String city = results.getString("City");
+                String country = results.getString("Country");
+                String phoneNumber = results.getString("Phone");
+
+                // Print each row
+                System.out.printf("%-25s %-40s %-25s %-25s %-15s\n",
+                        contactName, companyName, city, country, phoneNumber);
             }
             if (!hasResults) {
                 System.out.println("No customers found..");
@@ -124,19 +133,27 @@ public class UsingPreparedStatement {
             // Define the query
             String query = "SELECT * FROM products;";
             ps = connection.prepareStatement(query);
+
             // 2. Execute your query
             results = ps.executeQuery(query);
+
             // Print header
-            printProductHeader();
+            System.out.printf("%-15s %-35s %-15s %-15s\n",
+                    "Product ID", "Product Name", "Unit Price", "Products in Stock");
+
 
             // Process the results
             boolean hasResults = false;
             while (results.next()) {
                 hasResults = true;
-                printProductInformation(results.getInt("ProductID"),
-                        results.getString("ProductName"),
-                        results.getDouble("UnitPrice"),
-                        results.getInt("UnitsInStock"));
+                int productID = results.getInt("ProductID");
+                String productName = results.getString("ProductName");
+                double unitPrice = results.getDouble("UnitPrice");
+                int productStock = results.getInt("UnitsInStock");
+
+                // Print each row
+                System.out.printf("%-15d %-35s $%-25.2f %-15d\n",
+                        productID, productName, unitPrice, productStock );
 
             }
             if (!hasResults) {
@@ -145,11 +162,9 @@ public class UsingPreparedStatement {
         } catch (ClassNotFoundException e) {
             System.out.println("Class not found. Please ensure the JDBC driver is in your classpath.");
             e.printStackTrace();
-            System.exit(1);
         } catch (SQLException e) {
             System.out.println("An error occurred while accessing the database:");
             e.printStackTrace();
-            System.exit(1);
         } finally {
             try {
                 if (results != null) results.close();
@@ -157,11 +172,12 @@ public class UsingPreparedStatement {
                 if (connection != null) connection.close();
             } catch (SQLException e) {
                 e.printStackTrace();
-                System.exit(1);
             }
         }
     }
 
+
+    private static void doSimplyQuery(DataSor)
     /**
      * Using try-with-resources to manage connection, statement, and result set
      */
@@ -172,19 +188,25 @@ public class UsingPreparedStatement {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
-            System.out.println("Cannot load SQL driver...");
+            System.out.println("Cannot connect to driver");
             System.exit(1);
         }
 
+        BasicDataSource dataSource = new BasicDataSource();
+        dataSource.setUrl(url);
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
         try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement ps = connection.prepareStatement("SELECT * FROM categories;");
-             ResultSet results = ps.executeQuery()
+             PreparedStatement ps = connection.prepareStatement("SELECT * FROM categories;")
         ) {
             System.out.println("Connected to the database.");
 
-                // Print header
+            // Execute the query and process results
+            try (ResultSet results = ps.executeQuery()) {
 
-                printCategoryHeader();
+                // Print header
+                System.out.printf("%-15s %-35s %-15s \n",
+                        "Category ID", "Category Name", "Description");
 
                 // Track results
                 boolean hasResults = false;
@@ -192,25 +214,27 @@ public class UsingPreparedStatement {
                 // Loop through and print results
                 while (results.next()) {
                     hasResults = true;
+                    String categoryID = results.getString("CategoryID");
+                    String categoryName = results.getString("CategoryName");
+                    String description = results.getString("Description");
 
-                    printCategoryInformation(results.getInt("CategoryID"),
-                                results.getString("CategoryName"),
-                                results.getString("Description"));
+                    // Print each row
+                    System.out.printf("%-15s %-35s %-15s\n",
+                            categoryID, categoryName, description );
                 }
 
                 if (!hasResults) {
                     System.out.println("No categories found");
                 }
-
-        }
-        catch (SQLException e) {
+            }
+        } catch (SQLException e) {
             System.out.println("An error occurred while accessing the database:");
             e.printStackTrace();
-            System.exit(1);
         }
     }
 
-    public static void returnProductsByCategoryID(String username, String password, String url) {
+
+    public static void outputProductsByCategoryID(String username, String password, String url)   {
 
         int input = Console.PromptForInt("Enter Category ID: ");
 
@@ -218,8 +242,9 @@ public class UsingPreparedStatement {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
-            System.out.println("Cannot load SQL driver...");
-            System.exit(1);        }
+            System.out.println("Cannot connect to driver");
+            System.exit(1);
+        }
 
         try (Connection connection = DriverManager.getConnection(url, username, password);
              PreparedStatement ps = connection.prepareStatement("SELECT * FROM products WHERE CategoryID = ?")
@@ -232,18 +257,25 @@ public class UsingPreparedStatement {
 
             // Execute the query and process results
             try (ResultSet results = ps.executeQuery()) {
+                // Print header
+                System.out.printf("%-15s %-35s %-15s %-25s\n",
+                        "Product ID", "Product Name", "Unit Price", "Products in Stock");
 
-                printProductHeader();
                 // Track results
                 boolean hasResults = false;
+
                 // Loop through and print results
                 while (results.next()) {
                     hasResults = true;
-                    printProductInformation(results.getInt("ProductID"),
-                            results.getString("ProductName"),
-                            results.getDouble("UnitPrice"),
-                            results.getInt("UnitsInStock"));
+                    int productID = results.getInt("ProductID");
+                    String productName = results.getString("ProductName");
+                    double unitPrice = results.getDouble("UnitPrice");
+                    int productStock = results.getInt("UnitsInStock");
+
+                    System.out.printf("%-15d %-35s $%-25.2f %-15d\n",
+                            productID, productName, unitPrice, productStock);
                 }
+
                 if (!hasResults) {
                     System.out.println("No Products found matching the given Category ID.");
                 }
@@ -254,35 +286,6 @@ public class UsingPreparedStatement {
         }
     }
 
-    /**
-     * Helper methods used to print headers
-     */
 
-    public static void printProductHeader(){
-        System.out.printf("%-15s %-35s %-15s %-15s\n",
-                "Product ID", "Product Name", "Unit Price", "Products in Stock");
-    }
-    public static void printCustomerHeader(){
-        System.out.printf("%-25s %-40s %-25s %-25s %-15s\n",
-                "Contact Name", "Company Name", "City", "Country", "Phone Number");
-    }
-    public static void printCategoryHeader(){
-        System.out.printf("%-15s %-35s %-15s \n", "Category ID", "Category Name", "Description");
-    }
 
-    /**
-     * Helper methods used to print information in the database
-     */
-
-    public static void printProductInformation(int productID,String productName, double unitPrice, int productStock){
-        System.out.printf("%-15d %-35s $%-25.2f %-15d\n",productID, productName, unitPrice, productStock );
-    }
-    public static void printCustomerInformation(String contactName, String companyName, String city, String country, String phoneNumber){
-        System.out.printf("%-25s %-40s %-25s %-25s %-15s\n", contactName, companyName, city, country, phoneNumber);
-    }
-    public static void printCategoryInformation(int categoryID, String categoryName, String description ){
-        System.out.printf("%-15s %-35s %-15s\n",
-                categoryID, categoryName, description );
-
-    }
 }
