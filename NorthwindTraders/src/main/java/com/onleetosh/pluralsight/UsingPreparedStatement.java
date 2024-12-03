@@ -1,7 +1,5 @@
 package com.onleetosh.pluralsight;
 
-import com.google.protobuf.StringValue;
-
 import java.sql.*;
 
 public class UsingPreparedStatement {
@@ -51,14 +49,15 @@ public class UsingPreparedStatement {
                     System.out.println("Exiting the application. Goodbye!");
                     exit = true;
                 }
-                default -> System.out.println("Invalid option. Please select 0, 1, or 2.");
+                default -> System.out.println("Invalid entry. Please enter 0, 1, or 2.");
                 }
             }
             catch (Exception e) {
-                System.out.println("Invalid entry, Select [0-2]");
+                System.out.println("Invalid entry, enter [0-2]");
             }
         }
     }
+    
     public static void fetchCustomersFromDatabase(String username, String password, String url) {
         Connection connection = null;
         PreparedStatement ps = null;
@@ -151,7 +150,7 @@ public class UsingPreparedStatement {
                 int productStock = results.getInt("UnitsInStock");
 
                 // Print each row
-                System.out.printf("%-15d %-35s %-25.2f %-15d\n",
+                System.out.printf("%-15d %-35s $%-25.2f %-15d\n",
                             productID, productName, unitPrice, productStock );
 
             }
@@ -242,7 +241,7 @@ public class UsingPreparedStatement {
             // Execute the query and process results
             try (ResultSet results = ps.executeQuery()) {
                 // Print header
-                System.out.printf("%-15s %-35s %-15s %-15s\n",
+                System.out.printf("%-15s %-35s %-15s %-25s\n",
                         "Product ID", "Product Name", "Unit Price", "Products in Stock");
 
                 // Track results
@@ -256,7 +255,7 @@ public class UsingPreparedStatement {
                     double unitPrice = results.getDouble("UnitPrice");
                     int productStock = results.getInt("UnitsInStock");
 
-                    System.out.printf("%-15d %-35s %-25.2f %-15d\n",
+                    System.out.printf("%-15d %-35s $%-25.2f %-15d\n",
                             productID, productName, unitPrice, productStock);
                 }
 
