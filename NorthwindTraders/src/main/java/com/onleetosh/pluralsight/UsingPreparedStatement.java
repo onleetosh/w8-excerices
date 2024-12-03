@@ -1,5 +1,7 @@
 package com.onleetosh.pluralsight;
 
+import com.google.protobuf.StringValue;
+
 import java.sql.*;
 
 public class UsingPreparedStatement {
@@ -13,35 +15,47 @@ public class UsingPreparedStatement {
             System.exit(1);
         }
 
-        // Get the username, password, and URL from the command line args
+        // Get the username, password, and URL from Program arguments in configuration
         String username = args[0];
         String password = args[1];
         String url = args[2];
 
         boolean exit = false;
+        int command;
 
         while (!exit) {
             System.out.println("\nWhat do you want to do?\n" +
                     "1) Display all products\n" +
                     "2) Display all customers\n" +
+                    "3) Display all categories\n" +
                     "0) Exit");
 
-            int command = Console.PromptForInt("Select [0-2]: ");
+            try {
+                command = Console.PromptForInt("Select [0-2]: ");
 
             switch (command) {
                 case 1 -> {
                     fetchProductsFromDatabase(username, password, url);
-                    Console.PromptForYesNo("Press Enter to return to the menu...");
+                    Console.PromptForString("\nPress ENTER to return to previous screen");
                 }
                 case 2 -> {
                     fetchCustomersFromDatabase(username, password, url);
-                    Console.PromptForYesNo("Press Enter to return to the menu...");
+                    Console.PromptForString("\nPress ENTER to return to previous screen");
                 }
+                case 3 -> {
+                    fetchCategoriesFromDatabase(username, password, url);
+                    outputProductsByCategoryID(username, password, url);
+                    Console.PromptForString("\nPress ENTER to return to previous screen");
+                    }
                 case 0 -> {
                     System.out.println("Exiting the application. Goodbye!");
                     exit = true;
                 }
                 default -> System.out.println("Invalid option. Please select 0, 1, or 2.");
+                }
+            }
+            catch (Exception e) {
+                System.out.println("Invalid entry, Select [0-2]");
             }
         }
     }
@@ -55,10 +69,7 @@ public class UsingPreparedStatement {
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             // Establish a connection to the database
-            connection = DriverManager.getConnection(
-                    url,
-                    username,
-                    password);
+            connection = DriverManager.getConnection( url, username, password);
 
             System.out.println("Connected to the database.");
 
@@ -85,13 +96,13 @@ public class UsingPreparedStatement {
                         contactName, companyName, city, country, phoneNumber);
             }
             if (!hasResults) {
-                System.out.println("No customers found matching the criteria.");
+                System.out.println("No customers found..");
             }
         } catch (ClassNotFoundException e) {
             System.out.println("Class not found. Please ensure the JDBC driver is in your classpath.");
             e.printStackTrace();
         } catch (SQLException e) {
-            System.out.println("There was an SQL issue:");
+            System.out.println("An error occurred while accessing the database:");
             e.printStackTrace();
         } finally {
             try {
@@ -114,10 +125,7 @@ public class UsingPreparedStatement {
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             // Establish a connection to the database
-            connection = DriverManager.getConnection(
-                    url,
-                    username,
-                    password);
+            connection = DriverManager.getConnection( url, username, password);
 
             System.out.println("Connected to the database.");
 
@@ -137,17 +145,14 @@ public class UsingPreparedStatement {
             boolean hasResults = false;
             while (results.next()) {
                 hasResults = true;
+                int productID = results.getInt("ProductID");
+                String productName = results.getString("ProductName");
+                double unitPrice = results.getDouble("UnitPrice");
+                int productStock = results.getInt("UnitsInStock");
 
-                // process the results
-                while (results.next()) {
-                    int productID = results.getInt("ProductID");
-                    String productName = results.getString("ProductName");
-                    double unitPrice = results.getDouble("UnitPrice");
-                    int productStock = results.getInt("UnitsInStock");
-                    // Print each row
-                    System.out.printf("%-15d %-35s %-25.2f %-15d\n",
+                // Print each row
+                System.out.printf("%-15d %-35s %-25.2f %-15d\n",
                             productID, productName, unitPrice, productStock );
-                }
 
             }
             if (!hasResults) {
@@ -157,7 +162,7 @@ public class UsingPreparedStatement {
             System.out.println("Class not found. Please ensure the JDBC driver is in your classpath.");
             e.printStackTrace();
         } catch (SQLException e) {
-            System.out.println("There was an SQL issue:");
+            System.out.println("An error occurred while accessing the database:");
             e.printStackTrace();
         } finally {
             try {
@@ -169,5 +174,101 @@ public class UsingPreparedStatement {
             }
         }
     }
+
+
+    /**
+     * Using try-with-resources to manage connection, statement, and result set
+     */
+
+    public static void fetchCategoriesFromDatabase(String username, String password, String url) throws ClassNotFoundException {
+
+        // Load MySQL driver
+        Class.forName("com.mysql.cj.jdbc.Driver");
+
+        try (Connection connection = DriverManager.getConnection(url, username, password);
+             PreparedStatement ps = connection.prepareStatement("SELECT * FROM categories;")
+        ) {
+            System.out.println("Connected to the database.");
+
+            // Execute the query and process results
+            try (ResultSet results = ps.executeQuery()) {
+
+                // Print header
+                System.out.printf("%-15s %-35s %-15s \n",
+                        "Category ID", "Category Name", "Description");
+
+                // Track results
+                boolean hasResults = false;
+
+                // Loop through and print results
+                while (results.next()) {
+                    hasResults = true;
+                    String categoryID = results.getString("CategoryID");
+                    String categoryName = results.getString("CategoryName");
+                    String description = results.getString("Description");
+
+                    // Print each row
+                    System.out.printf("%-15s %-35s %-15s\n",
+                            categoryID, categoryName, description );
+                }
+
+                if (!hasResults) {
+                    System.out.println("No categories found");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("An error occurred while accessing the database:");
+            e.printStackTrace();
+        }
+    }
+
+
+    public static void outputProductsByCategoryID(String username, String password, String url) throws ClassNotFoundException {
+
+        int input = Console.PromptForInt("Enter Category ID: ");
+
+        // Load MySQL driver
+        Class.forName("com.mysql.cj.jdbc.Driver");
+
+        try (Connection connection = DriverManager.getConnection(url, username, password);
+             PreparedStatement ps = connection.prepareStatement("SELECT * FROM products WHERE CategoryID = ?")
+        )
+        {
+            System.out.println("Connected to the database.");
+
+            // Set the parameter for the query
+            ps.setInt(1, input);
+
+            // Execute the query and process results
+            try (ResultSet results = ps.executeQuery()) {
+                // Print header
+                System.out.printf("%-15s %-35s %-15s %-15s\n",
+                        "Product ID", "Product Name", "Unit Price", "Products in Stock");
+
+                // Track results
+                boolean hasResults = false;
+
+                // Loop through and print results
+                while (results.next()) {
+                    hasResults = true;
+                    int productID = results.getInt("ProductID");
+                    String productName = results.getString("ProductName");
+                    double unitPrice = results.getDouble("UnitPrice");
+                    int productStock = results.getInt("UnitsInStock");
+
+                    System.out.printf("%-15d %-35s %-25.2f %-15d\n",
+                            productID, productName, unitPrice, productStock);
+                }
+
+                if (!hasResults) {
+                    System.out.println("No Products found matching the given Category ID.");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("An error occurred while accessing the database:");
+            e.printStackTrace();
+        }
+    }
+
 
 }
