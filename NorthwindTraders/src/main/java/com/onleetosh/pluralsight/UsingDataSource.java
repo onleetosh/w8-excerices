@@ -34,15 +34,15 @@ public class UsingDataSource {
 
                 switch (command) {
                     case 1 -> {
-                        useDataSourceToReturnProducts(username, password, url);
+                        createDataSourceForProducts(username, password, url);
                         Console.PromptForString("\nPress ENTER to return to previous screen");
                     }
                     case 2 -> {
-                        useDataSourceToReturnCustomerInformation(username, password, url);
+                        createDataSourceForCustomers(username, password, url);
                         Console.PromptForString("\nPress ENTER to return to previous screen");
                     }
                     case 3 -> {
-                        useDataSourceToReturnCategories(username, password, url);
+                        createDataSourceForCategories(username, password, url);
                         returnProductsByCategoryID(username, password, url);
                         Console.PromptForString("\nPress ENTER to return to previous screen");
                     }
@@ -61,7 +61,7 @@ public class UsingDataSource {
     /**
      * Using try-with-resources to manage connection, statement, and result set
      */
-    public static void useDataSourceToReturnCustomerInformation(String username, String password, String url) {
+    public static void createDataSourceForCustomers(String username, String password, String url) {
         // Load MySQL driver
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -113,14 +113,7 @@ public class UsingDataSource {
         }
     }
 
-    public static void useDataSourceToReturnProducts(String username, String password, String url){
-        // Load MySQL driver
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            System.out.println("Cannot connect to driver");
-            System.exit(1);
-        }
+    public static void createDataSourceForProducts(String username, String password, String url){
 
         BasicDataSource dataSource = new BasicDataSource();
         dataSource.setUrl(url);
@@ -161,15 +154,7 @@ public class UsingDataSource {
     }
 
 
-    public static void useDataSourceToReturnCategories(String username, String password, String url){
-
-        // Load MySQL driver
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            System.out.println("Cannot connect to driver");
-            System.exit(1);
-        }
+    public static void createDataSourceForCategories(String username, String password, String url){
 
         BasicDataSource dataSource = new BasicDataSource();
         dataSource.setUrl(url);
